@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const redis = require("./db/redisClient");
+const { requireApiKey } = require("./middleware/auth");
 
 const app = express();
 app.use(cors());
@@ -16,7 +17,7 @@ app.get("/api/v1/health", async (_req, res) => {
   }
 });
 
-app.use("/api/v1/flags", require("./routes/flags"));
+app.use("/api/v1/flags", requireApiKey, require("./routes/flags"));
 app.use("/api/v1/evaluate", require("./routes/evaluate"));
 
 app.use((err, _req, res, _next) => {
