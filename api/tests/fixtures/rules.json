@@ -1,0 +1,5 @@
+{
+  "targetingRules": [
+    { "id": "r1", "attribute": "plan", "operator": "in", "values": ["pro", "enterprise"], "serve": true, "priority": 1 }
+  ]
+}

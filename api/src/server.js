@@ -17,6 +17,7 @@ app.get("/api/v1/health", async (_req, res) => {
 });
 
 app.use("/api/v1/flags", require("./routes/flags"));
+app.use("/api/v1/evaluate", require("./routes/evaluate"));
 
 app.use((err, _req, res, _next) => {
   console.error(err);
