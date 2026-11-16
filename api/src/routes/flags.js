@@ -4,6 +4,9 @@ const { envSchema, createFlagSchema, updateFlagSchema } = require("../models/fla
 
 const router = Router();
 
+// a label for the audit log, not a security feature (anyone can type any name)
+const actorOf = (req) => req.get("x-actor") || "unknown";
+
 const wrap = (fn) => (req, res, next) => fn(req, res, next).catch(next);
 
 const badRequest = (res, error) =>
@@ -34,7 +37,7 @@ router.post("/", wrap(async (req, res) => {
   const parsed = createFlagSchema.safeParse(req.body);
   if (!parsed.success) return badRequest(res, parsed.error);
 
-  const flag = await repo.create(parsed.data);
+  const flag = await repo.create(parsed.data, actorOf(req));
   if (!flag) return res.status(409).json({ error: "flag already exists in this environment" });
   res.status(201).json(flag);
 }));
@@ -55,7 +58,7 @@ router.patch("/:key", wrap(async (req, res) => {
   const parsed = updateFlagSchema.safeParse(req.body);
   if (!parsed.success) return badRequest(res, parsed.error);
 
-  const flag = await repo.update(env, req.params.key, parsed.data);
+  const flag = await repo.update(env, req.params.key, parsed.data, actorOf(req));
   if (!flag) return res.status(404).json({ error: "flag not found" });
   res.json(flag);
 }));
@@ -64,7 +67,7 @@ router.patch("/:key", wrap(async (req, res) => {
 router.delete("/:key", wrap(async (req, res) => {
   const env = getEnv(req, res);
   if (!env) return;
-  const removed = await repo.remove(env, req.params.key);
+  const removed = await repo.remove(env, req.params.key, actorOf(req));
   if (!removed) return res.status(404).json({ error: "flag not found" });
   res.status(204).end();
 }));
