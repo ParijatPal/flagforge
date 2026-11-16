@@ -16,5 +16,12 @@ app.get("/api/v1/health", async (_req, res) => {
   }
 });
 
+app.use("/api/v1/flags", require("./routes/flags"));
+
+app.use((err, _req, res, _next) => {
+  console.error(err);
+  res.status(500).json({ error: "internal server error" });
+});
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`FlagForge API on :${PORT}`));
