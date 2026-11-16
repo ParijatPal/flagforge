@@ -1,3 +1,6 @@
+Auth: all /api/v1/flags routes need header `x-api-key: <API_KEY>`.
+/evaluate and /health are public.
+
 Flag { id, key, name, description, environment, enabled,
        rolloutPercentage, targetingRules[], defaultVariant,
        version, createdAt, updatedAt }
