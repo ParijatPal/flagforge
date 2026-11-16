@@ -1,5 +1,6 @@
 const { randomUUID } = require("crypto");
 const redis = require("./redisClient");
+const audit = require("./auditRepository");
 
 const flagKey = (env, key) => `flag:${env}:${key}`;
 const setKey = (env) => `flags:${env}`;
@@ -9,7 +10,7 @@ async function publish(env, key, action, version) {
   await redis.publish(channel(env), JSON.stringify({ key, action, version }));
 }
 
-async function create(data) {
+async function create(data, actor = "unknown") {
   const { environment: env, key } = data;
   const now = new Date().toISOString();
   const flag = { id: randomUUID(), ...data, version: 1, createdAt: now, updatedAt: now };
@@ -20,6 +21,7 @@ async function create(data) {
 
   await redis.sadd(setKey(env), key);
   await publish(env, key, "created", flag.version);
+  await audit.record(env, { action: "created", key, version: flag.version, actor });
   return flag;
 }
 
@@ -38,7 +40,7 @@ async function list(env) {
     .sort((a, b) => a.key.localeCompare(b.key));
 }
 
-async function update(env, key, changes) {
+async function update(env, key, changes, actor = "unknown") {
   const existing = await get(env, key);
   if (!existing) return null;
 
@@ -50,16 +52,18 @@ async function update(env, key, changes) {
   };
   await redis.set(flagKey(env, key), JSON.stringify(updated));
   await publish(env, key, "updated", updated.version);
+  await audit.record(env, { action: "updated", key, version: updated.version, actor, changes });
   return updated;
 }
 
-async function remove(env, key) {
+async function remove(env, key, actor = "unknown") {
   const existing = await get(env, key);
   if (!existing) return false;
 
   await redis.del(flagKey(env, key));
   await redis.srem(setKey(env), key);
   await publish(env, key, "deleted", existing.version + 1);
+  await audit.record(env, { action: "deleted", key, version: existing.version + 1, actor });
   return true;
 }
 
