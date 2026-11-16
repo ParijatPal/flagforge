@@ -1,0 +1,11 @@
+{
+  "name": "flagforge-sdk",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.js",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "test": "node --test",
+    "demo": "node examples/demo.js"
+  }
+}
