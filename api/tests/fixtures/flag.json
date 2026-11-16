@@ -1,0 +1,7 @@
+{
+  "key": "new-checkout",
+  "name": "New checkout flow",
+  "environment": "dev",
+  "enabled": true,
+  "rolloutPercentage": 50
+}
