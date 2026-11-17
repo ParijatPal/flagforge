@@ -10,6 +10,8 @@
   "scripts": {
     "test": "node --test",
     "demo": "node examples/demo.js",
-    "latency": "node examples/latency.js"
+    "latency": "node examples/latency.js",
+    "parity": "node examples/parity.js",
+    "evalbench": "node examples/eval-bench.js"
   }
 }
