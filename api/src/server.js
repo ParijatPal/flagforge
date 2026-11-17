@@ -4,6 +4,15 @@ const cors = require("cors");
 const redis = require("./db/redisClient");
 const { requireApiKey } = require("./middleware/auth");
 
+// loud reminder when a real deployment still uses the public dev keys
+const DEV_KEYS = ["dev-secret-key", "dev-sdk-key"];
+if (
+  process.env.NODE_ENV === "production" &&
+  [process.env.API_KEY, process.env.SDK_KEY].some((k) => DEV_KEYS.includes(k))
+) {
+  console.warn("WARNING: running in production with the default dev keys. Set API_KEY and SDK_KEY.");
+}
+
 const app = express();
 app.use(cors());
 app.use(express.json());
