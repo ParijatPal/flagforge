@@ -1,5 +1,6 @@
-Auth: all /api/v1/flags and /api/v1/audit routes need header `x-api-key: <API_KEY>`.
-/evaluate and /health are public.
+Auth: /api/v1/flags and /api/v1/audit need header `x-api-key: <API_KEY>`.
+/api/v1/sdk/flags needs header `x-sdk-key: <SDK_KEY>` (read-only).
+/evaluate, /stream and /health are public.
 
 Flag { id, key, name, description, environment, enabled,
        rolloutPercentage, targetingRules[], defaultVariant,
@@ -18,10 +19,11 @@ GET    /api/v1/evaluate/:key?env=prod&userId=123&plan=pro
 GET    /api/v1/audit?env=prod&limit=50&key=my-flag
        -> { entries: [{ ts, env, action, key, version, actor, changes }] }
        (newest first, last 1000 kept; optional header x-actor names who made a change)
-GET    /api/v1/health
-
+GET    /api/v1/sdk/flags?env=prod   (header x-sdk-key, read-only)
+       -> { env, flags: [Flag] }  full snapshot for local evaluation
 GET    /api/v1/stream?env=prod   (public, Server-Sent Events)
        events: hello, flag -> { key, action, version }
+GET    /api/v1/health
 
 Redis keys: flag:{env}:{key}   flags:{env}   audit:{env}
 Pub/Sub:    flagforge:updates:{env} -> { key, action, version }
