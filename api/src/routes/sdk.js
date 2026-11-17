@@ -4,15 +4,20 @@ const { envSchema } = require("../models/flagSchema");
 const repo = require("../db/flagRepository");
 
 const router = Router();
-const SDK_KEY = process.env.SDK_KEY || "dev-sdk-key";
 
 // compare hashes so the check takes the same time for any input
 const digest = (s) => crypto.createHash("sha256").update(String(s)).digest();
-const keyOk = (given) => crypto.timingSafeEqual(digest(given), digest(SDK_KEY));
+const keyOk = (given, expected) => crypto.timingSafeEqual(digest(given), digest(expected));
 
 // read-only key: it can only call this route, never the admin /flags routes
 router.use((req, res, next) => {
-  if (!keyOk(req.get("x-sdk-key") ?? "")) {
+  const expected = process.env.SDK_KEY;
+
+  // fail closed: no key configured means nobody gets in
+  if (!expected) {
+    return res.status(500).json({ error: "server has no SDK_KEY configured" });
+  }
+  if (!keyOk(req.get("x-sdk-key") ?? "", expected)) {
     return res.status(401).json({ error: "invalid sdk key" });
   }
   next();
