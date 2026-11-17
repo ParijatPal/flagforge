@@ -20,5 +20,8 @@ GET    /api/v1/audit?env=prod&limit=50&key=my-flag
        (newest first, last 1000 kept; optional header x-actor names who made a change)
 GET    /api/v1/health
 
+GET    /api/v1/stream?env=prod   (public, Server-Sent Events)
+       events: hello, flag -> { key, action, version }
+
 Redis keys: flag:{env}:{key}   flags:{env}   audit:{env}
 Pub/Sub:    flagforge:updates:{env} -> { key, action, version }

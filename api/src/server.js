@@ -20,6 +20,7 @@ app.get("/api/v1/health", async (_req, res) => {
 app.use("/api/v1/flags", requireApiKey, require("./routes/flags"));
 app.use("/api/v1/evaluate", require("./routes/evaluate"));
 app.use("/api/v1/audit", requireApiKey, require("./routes/audit"));
+app.use("/api/v1/stream", require("./routes/stream"));
 
 app.use((err, _req, res, _next) => {
   console.error(err);
