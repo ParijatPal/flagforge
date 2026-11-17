@@ -12,6 +12,8 @@
     "demo": "node examples/demo.js",
     "latency": "node examples/latency.js",
     "parity": "node examples/parity.js",
-    "evalbench": "node examples/eval-bench.js"
+    "evalbench": "node examples/eval-bench.js",
+    "recovery:missed": "node examples/recovery-missed-event.js",
+    "recovery:regression": "node examples/recovery-regression.js"
   }
 }
