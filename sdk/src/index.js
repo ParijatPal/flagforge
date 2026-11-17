@@ -1,1 +1,1 @@
-export { FlagForge } from "./client.js";
+module.exports = require("./client");
