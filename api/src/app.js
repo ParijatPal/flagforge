@@ -1,0 +1,33 @@
+const express = require("express");
+const cors = require("cors");
+const redis = require("./db/redisClient");
+const { requireApiKey } = require("./middleware/auth");
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+app.get("/api/v1/health", async (_req, res) => {
+  try {
+    await redis.ping();
+    res.json({ status: "ok", redis: "up" });
+  } catch {
+    res.status(503).json({ status: "degraded", redis: "down" });
+  }
+});
+
+app.use("/api/v1/flags", requireApiKey, require("./routes/flags"));
+app.use("/api/v1/evaluate", require("./routes/evaluate"));
+app.use("/api/v1/audit", requireApiKey, require("./routes/audit"));
+app.use("/api/v1/sdk/flags", require("./routes/sdk"));
+app.use("/api/v1/stream", require("./routes/stream"));
+
+app.use((err, _req, res, _next) => {
+  if (err.type === "entity.parse.failed") {
+    return res.status(400).json({ error: "invalid JSON body" });
+  }
+  console.error(err);
+  res.status(500).json({ error: "internal server error" });
+});
+
+module.exports = app;
