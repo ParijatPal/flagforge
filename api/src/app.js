@@ -37,6 +37,9 @@ app.use((err, _req, res, _next) => {
   if (err.type === "entity.parse.failed") {
     return res.status(400).json({ error: "invalid JSON body" });
   }
+  if (err.code === "CONFLICT") {
+    return res.status(409).json({ error: err.message });
+  }
   console.error(err);
   res.status(500).json({ error: "internal server error" });
 });
