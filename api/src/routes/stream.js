@@ -1,11 +1,15 @@
 const { Router } = require("express");
 const redis = require("../db/redisClient");
 const { envSchema } = require("../models/flagSchema");
+const { num } = require("../middleware/rateLimit");
 
 const router = Router();
 
 // env -> Set of open responses (one per connected SDK)
 const clients = new Map();
+
+// ip -> number of streams currently open (one client can't hold every socket)
+const openByIp = new Map();
 
 // A Redis connection in subscribe mode can't run normal commands,
 // so the stream gets its own connection, shared by every client.
@@ -33,6 +37,7 @@ function ensureSubscriber() {
 async function closeStream() {
   for (const set of clients.values()) for (const res of set) res.end();
   clients.clear();
+  openByIp.clear();
   if (sub) await sub.quit().catch(() => {});
   sub = null;
   subReady = null;
@@ -44,6 +49,12 @@ router.get("/", async (req, res) => {
   if (!env.success) {
     return res.status(400).json({ error: "env must be dev, staging or prod" });
   }
+
+  const max = num("STREAM_MAX_PER_IP", 50);
+  if ((openByIp.get(req.ip) ?? 0) >= max) {
+    return res.status(429).json({ error: "too many open streams for this IP" });
+  }
+  openByIp.set(req.ip, (openByIp.get(req.ip) ?? 0) + 1);
 
   const ready = ensureSubscriber();
 
@@ -64,6 +75,9 @@ router.get("/", async (req, res) => {
   req.on("close", () => {
     clearInterval(heartbeat);
     clients.get(env.data)?.delete(res);
+    const left = (openByIp.get(req.ip) ?? 1) - 1;
+    if (left > 0) openByIp.set(req.ip, left);
+    else openByIp.delete(req.ip);
   });
 
   // "hello" means we are really subscribed, so a client can trust it
