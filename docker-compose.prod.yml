@@ -1,0 +1,28 @@
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: ["redis-data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  api:
+    build: ./api
+    ports: ["4000:4000"]
+    environment:
+      PORT: 4000
+      REDIS_URL: redis://redis:6379
+      API_KEY: ${API_KEY:?set API_KEY in .env}
+      SDK_KEY: ${SDK_KEY:?set SDK_KEY in .env}
+      TRUST_PROXY: ${TRUST_PROXY:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  redis-data:
